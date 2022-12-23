@@ -6,7 +6,7 @@ import (
 )
 
 type Entities interface {
-	AuditableEntity
+	AuditableEntity | Event | Category | Order
 }
 
 type Event struct {
