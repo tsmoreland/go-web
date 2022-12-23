@@ -2,6 +2,7 @@ package domain
 
 import (
 	"errors"
+	"math"
 	"time"
 )
 
@@ -15,6 +16,14 @@ type AuditableEntity struct {
 	CreatedDate      *time.Time
 	LastModifiedBy   *string
 	LastModifiedDate *time.Time
+}
+
+type Page[T Entities] struct {
+	PageNumber int `json:"page_number"`
+	PageSize   int `json:"page_size"`
+	TotalPages int `json:"total_pages"`
+	TotalCount int `json:"total_count"`
+	Items      []T `json:"items"`
 }
 
 type PageRequest struct {
@@ -31,4 +40,12 @@ func (req PageRequest) Validate() []error {
 		errs = append(errs, ErrInvalidPageSize)
 	}
 	return errs
+}
+
+func (req PageRequest) CalculateTotalPages(totalCount int) int {
+	if req.PageSize > 0 {
+		return int(math.Ceil(float64(totalCount) / float64(req.PageSize)))
+	} else {
+		return 0
+	}
 }
