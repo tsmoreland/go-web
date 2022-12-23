@@ -1,0 +1,4 @@
+github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
+github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/tsmoreland/go-web/globoticket-ticketmanager/domain v0.0.0-20221223210512-62993b75261e h1:a4H6ksFPrLMUrqNkw4T3Ddon6ehr/Bj7X/Kybmcddog=
+github.com/tsmoreland/go-web/globoticket-ticketmanager/domain v0.0.0-20221223210512-62993b75261e/go.mod h1:arWbmpnKlJp490g29L/uJ719FzZa5zpB8ls06Ve8DSI=
