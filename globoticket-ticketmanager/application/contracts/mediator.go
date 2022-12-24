@@ -10,6 +10,10 @@ type MediatorRequestHandler interface {
 	Handle(req MediatorRequest) chan MediatorResponse
 }
 
+type MediatorRequestHandlerFactory interface {
+	Build() MediatorRequestHandler
+}
+
 type MediatorResponse interface {
 	Error() error
 	HasResponse() bool
@@ -21,5 +25,5 @@ type Mediator interface {
 }
 
 type MediatorOptions interface {
-	AddHandler(requestType reflect.Type, handler MediatorRequestHandler)
+	AddHandler(requestType reflect.Type, handlerFactory MediatorRequestHandlerFactory)
 }
