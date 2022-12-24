@@ -1,23 +1,23 @@
 package contracts
 
-import "reflect"
-
 type MediatorRequest interface {
 }
 
 type MediatorRequestHandler interface {
-	CanHandle(req MediatorRequest)
-	Handle(req MediatorRequest) chan MediatorResponse
+	CanHandle(req MediatorRequest) bool
+	Handle(req MediatorRequest) (chan MediatorResponse, error)
+	Close() error
 }
 
 type MediatorRequestHandlerFactory interface {
-	Build() MediatorRequestHandler
+	Build(provider ServiceProvider) MediatorRequestHandler
 }
 
 type MediatorResponse interface {
 	Error() error
 	HasResponse() bool
-	Response() (chan any, error)
+	Response() (any, error)
+	Close() error
 }
 
 type Mediator interface {
@@ -25,5 +25,5 @@ type Mediator interface {
 }
 
 type MediatorOptions interface {
-	AddHandler(requestType reflect.Type, handlerFactory MediatorRequestHandlerFactory)
+	AddHandler(name string, handlerFactory MediatorRequestHandlerFactory)
 }
