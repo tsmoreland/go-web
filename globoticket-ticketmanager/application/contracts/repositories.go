@@ -12,6 +12,7 @@ type Repository[T domain.Entities] interface {
 	Add(entity T) chan SingleResponse[T]
 	Update(entity T) chan error
 	Delete(entity T) chan error
+	Close() error
 }
 
 type EventsRepository interface {
@@ -43,4 +44,20 @@ type PageResponse[T domain.Entities] struct {
 	TotalCount int
 	Items      []T
 	Err        error
+}
+
+type RepositoryFactory[T domain.Entities] interface {
+	Build() Repository[T]
+}
+
+type EventsRepositoryFactory interface {
+	Repository[domain.Event]
+}
+
+type CategoriesRepositoryFactory interface {
+	Repository[domain.Category]
+}
+
+type OrdersRepositoryFactory interface {
+	Repository[domain.Order]
 }
