@@ -22,7 +22,7 @@ func main() {
 	var serverOptions options
 
 	flag.IntVar(&serverOptions.port, "port", 9000, "HTTP Listen Port")
-	flag.StringVar(&serverOptions.env, "env", 9000, "server environment")
+	flag.StringVar(&serverOptions.env, "env", "production", "server environment")
 	flag.Parse()
 
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
