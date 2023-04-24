@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 type options struct {
@@ -32,11 +33,16 @@ func main() {
 	}
 	serverAddress := fmt.Sprintf(":%d", svc.settings.port)
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/api/v1/health", svc.healthcheck)
+	svr := http.Server{
+		Addr:         serverAddress,
+		Handler:      svc.route(),
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
+	}
 
 	logger.Printf("Starting %s server on %s", svc.settings.env, serverAddress)
-	if err := http.ListenAndServe(serverAddress, mux); err != nil {
-		log.Fatalln(err)
+	if err := svr.ListenAndServe(); err != nil {
+		log.Fatal(err)
 	}
 }
