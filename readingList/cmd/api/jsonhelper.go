@@ -24,7 +24,7 @@ func (svc *service) writeJSON(w http.ResponseWriter, status int, data envelope) 
 func (svc *service) readJSONObject(w http.ResponseWriter, r *http.Request, dto any) error {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
-	maxBytes := 2_097_152 // 2MB
+	var maxBytes int64 = 2_097_152 // 2MB
 	http.MaxBytesReader(w, r.Body, maxBytes)
 
 	if err := decoder.Decode(dto); err != nil {
