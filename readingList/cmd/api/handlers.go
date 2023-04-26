@@ -53,14 +53,9 @@ func (svc *service) getOrCreateBooks(w http.ResponseWriter, r *http.Request) {
 			},
 		}
 
-		js, err := json.Marshal(books)
-		if err != nil {
+		if err := svc.writeJSON(w, http.StatusOK, books); err != nil {
 			http.Error(w, "", http.StatusInternalServerError)
-			return
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(js)
 		return
 	}
 	if r.Method == http.MethodPost {
@@ -112,14 +107,9 @@ func (svc *service) getBook(id int64, w http.ResponseWriter, r *http.Request) {
 		Version:   1.0,
 	}
 
-	js, err := json.Marshal(book)
-	if err != nil {
+	if err := svc.writeJSON(w, http.StatusOK, book); err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
-		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = w.Write(js)
 }
 func (svc *service) updateBook(id int64, w http.ResponseWriter, r *http.Request) {
 	_ = r
