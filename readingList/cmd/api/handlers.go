@@ -53,14 +53,26 @@ func (svc *service) getOrCreateBooks(w http.ResponseWriter, r *http.Request) {
 			},
 		}
 
-		if err := svc.writeJSON(w, http.StatusOK, books); err != nil {
+		if err := svc.writeJSON(w, http.StatusOK, envelope{"books": books}); err != nil {
 			http.Error(w, "", http.StatusInternalServerError)
 		}
 		return
 	}
 	if r.Method == http.MethodPost {
-		_, _ = fmt.Fprint(w, "")
-		http.Error(w, "", http.StatusBadRequest)
+		var bookDto struct {
+			Title     string   `json:"title"`
+			Published int      `json:"published"`
+			Pages     int      `json:"pages"`
+			Genres    []string `json:"genres"`
+			Rating    float64  `json:"rating"`
+		}
+
+		if err := svc.readJSONObject(w, r, &bookDto); err != nil {
+			// custom error handling details: Alex Edwards, Let's Go Further Chapter 4
+			svc.writeBadRequest(w, err)
+			return
+		}
+		_, _ = fmt.Fprint(w, bookDto)
 		return
 	}
 	http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
@@ -107,13 +119,51 @@ func (svc *service) getBook(id int64, w http.ResponseWriter, r *http.Request) {
 		Version:   1.0,
 	}
 
-	if err := svc.writeJSON(w, http.StatusOK, book); err != nil {
+	if err := svc.writeJSON(w, http.StatusOK, envelope{"book": book}); err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
 	}
 }
 func (svc *service) updateBook(id int64, w http.ResponseWriter, r *http.Request) {
-	_ = r
-	_, _ = fmt.Fprintf(w, "update book %d", id)
+	var bookDto struct {
+		Title     *string  `json:"title"`
+		Published *int     `json:"published"`
+		Pages     *int     `json:"pages"`
+		Genres    []string `json:"genres"`
+		Rating    *float64 `json:"rating"`
+	}
+
+	book := data.Book{
+		ID:        id,
+		CreatedAt: time.Now(),
+		Title:     "Hunger Games",
+		Published: 2008,
+		Pages:     374,
+		Rating:    5,
+		Version:   1,
+	}
+
+	if err := svc.readJSONObject(w, r, &bookDto); err != nil {
+		svc.writeBadRequest(w, err)
+		return
+	}
+
+	if bookDto.Title != nil {
+		book.Title = *bookDto.Title
+	}
+	if bookDto.Published != nil {
+		book.Published = *bookDto.Published
+	}
+	if bookDto.Pages != nil {
+		book.Pages = *bookDto.Pages
+	}
+	if len(bookDto.Genres) > 0 {
+		book.Genres = bookDto.Genres
+	}
+	if bookDto.Rating != nil {
+		book.Rating = *bookDto.Rating
+	}
+
+	_, _ = fmt.Fprintf(w, "update book %d %v", id, book)
 }
 func (svc *service) deleteBook(id int64, w http.ResponseWriter, r *http.Request) {
 	_ = r
