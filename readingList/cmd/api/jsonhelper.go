@@ -11,14 +11,9 @@ import (
 type envelope map[string]any
 
 func (svc *service) writeJSON(w http.ResponseWriter, status int, data envelope) error {
-	if js, err := json.Marshal(data); err != nil {
-		return err
-	} else {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(status)
-		_, _ = w.Write(js)
-		return nil
-	}
+	w.WriteHeader(status)
+	w.Header().Set("Content-Type", "application/json")
+	return json.NewEncoder(w).Encode(data)
 }
 
 func (svc *service) readJSONObject(w http.ResponseWriter, r *http.Request, dto any) error {
