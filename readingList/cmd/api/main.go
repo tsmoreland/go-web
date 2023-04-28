@@ -36,6 +36,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	if err := repository.Ping(); err != nil {
+		log.Fatal(err)
+	}
+
 	defer func() {
 		if err := repository.Close; err != nil {
 			log.Printf("%v", err)
