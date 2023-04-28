@@ -26,4 +26,11 @@ func main() {
 	if err := r.Migrate(); err != nil {
 		log.Fatal(err)
 	}
+
+	for _, b := range getBooks() {
+		if _, err := r.InsertOne(b.Title, b.Published, b.Pages, b.Rating, b.Genres); err != nil {
+			log.Fatal(err)
+		}
+	}
+
 }
