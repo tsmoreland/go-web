@@ -2,13 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"github.com/tsmoreland/go-web/readingList/internal/data"
+	_ "github.com/tsmoreland/go-web/readingList/internal/data"
 	"net/http"
 	"strconv"
-	"time"
-
-	_ "github.com/tsmoreland/go-web/readingList/internal/data"
 )
 
 func (svc *service) healthcheck(w http.ResponseWriter, r *http.Request) {
@@ -32,25 +30,9 @@ func (svc *service) healthcheck(w http.ResponseWriter, r *http.Request) {
 
 func (svc *service) getOrCreateBooks(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		books := []data.Book{
-			{
-				ID:        1,
-				CreatedAt: time.Date(1990, 11, 20, 0, 0, 0, 0, time.UTC),
-				Title:     "Jurassic Park",
-				Pages:     448,
-				Genres:    []string{"Science Fiction", "Action"},
-				Rating:    5.0,
-				Version:   1.0,
-			},
-			{
-				ID:        2,
-				CreatedAt: time.Date(1994, 11, 20, 0, 0, 0, 0, time.UTC),
-				Title:     "Jurassic Park 2",
-				Pages:     448,
-				Genres:    []string{"Science Fiction", "Action"},
-				Rating:    5.0,
-				Version:   1.0,
-			},
+		books, err := svc.repository.FindAll(true)
+		if err != nil {
+			http.Error(w, "", http.StatusInternalServerError)
 		}
 
 		if err := svc.writeJSON(w, http.StatusOK, envelope{"books": books}); err != nil {
@@ -72,7 +54,15 @@ func (svc *service) getOrCreateBooks(w http.ResponseWriter, r *http.Request) {
 			svc.writeBadRequest(w, err)
 			return
 		}
-		_, _ = fmt.Fprint(w, bookDto)
+
+		book, err := svc.repository.
+			InsertOne(bookDto.Title, bookDto.Published, bookDto.Pages, bookDto.Rating, bookDto.Genres)
+		if err != nil {
+			http.Error(w, "", http.StatusBadRequest)
+		}
+		if err := svc.writeJSON(w, http.StatusCreated, envelope{"book": book}); err != nil {
+			http.Error(w, "", http.StatusInternalServerError)
+		}
 		return
 	}
 	http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
@@ -109,14 +99,14 @@ func (svc *service) getUpdateOrDeleteBooks(w http.ResponseWriter, r *http.Reques
 func (svc *service) getBook(id int64, w http.ResponseWriter, r *http.Request) {
 	_ = r
 
-	book := data.Book{
-		ID:        id,
-		CreatedAt: time.Date(1990, 11, 20, 0, 0, 0, 0, time.UTC),
-		Title:     "Jurassic Park",
-		Pages:     448,
-		Genres:    []string{"Science Fiction", "Action"},
-		Rating:    5.0,
-		Version:   1.0,
+	book, err := svc.repository.FindById(id, true)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.NotFoundError):
+			http.Error(w, "", http.StatusNotFound)
+		default:
+			http.Error(w, "", http.StatusInternalServerError)
+		}
 	}
 
 	if err := svc.writeJSON(w, http.StatusOK, envelope{"book": book}); err != nil {
@@ -132,14 +122,14 @@ func (svc *service) updateBook(id int64, w http.ResponseWriter, r *http.Request)
 		Rating    *float64 `json:"rating"`
 	}
 
-	book := data.Book{
-		ID:        id,
-		CreatedAt: time.Now(),
-		Title:     "Hunger Games",
-		Published: 2008,
-		Pages:     374,
-		Rating:    5,
-		Version:   1,
+	book, err := svc.repository.FindById(id, true)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.NotFoundError):
+			http.Error(w, "", http.StatusNotFound)
+		default:
+			http.Error(w, "", http.StatusInternalServerError)
+		}
 	}
 
 	if err := svc.readJSONObject(w, r, &bookDto); err != nil {
@@ -163,9 +153,25 @@ func (svc *service) updateBook(id int64, w http.ResponseWriter, r *http.Request)
 		book.Rating = *bookDto.Rating
 	}
 
-	_, _ = fmt.Fprintf(w, "update book %d %v", id, book)
+	if err := svc.repository.Update(book); err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+	}
+	if err := svc.writeJSON(w, http.StatusOK, envelope{"book": book}); err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+	}
 }
 func (svc *service) deleteBook(id int64, w http.ResponseWriter, r *http.Request) {
 	_ = r
-	_, _ = fmt.Fprintf(w, "delete book %d", id)
+
+	err := svc.repository.DeleteById(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.NotFoundError):
+			http.Error(w, "", http.StatusNotFound)
+		default:
+			http.Error(w, "", http.StatusInternalServerError)
+		}
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
