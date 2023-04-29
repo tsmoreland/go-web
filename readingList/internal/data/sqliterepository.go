@@ -164,7 +164,7 @@ func (r *SqliteRepository) FindAll(includeGenres bool) ([]*Book, error) {
 		}
 	}()
 
-	books := []*Book{}
+	var books []*Book
 	for rows.Next() {
 		var book Book
 		var createdAt string
