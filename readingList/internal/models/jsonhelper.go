@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"net/http"
 )
 
@@ -28,8 +27,4 @@ func ReadJSONObject(r io.Reader, dto any) error {
 		return errors.New("body should  only contain a single object")
 	}
 	return nil
-}
-func WriteBadRequest(w http.ResponseWriter, err error) {
-	log.Println(err)
-	http.Error(w, "", http.StatusBadRequest)
 }
