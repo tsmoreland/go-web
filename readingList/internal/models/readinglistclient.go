@@ -1,6 +1,8 @@
 package models
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,7 +13,15 @@ type Book struct {
 	Title     string   `json:"title"`
 	Published int      `json:"published"`
 	Pages     int      `json:"pages"`
-	Genres    []string `json:"geres"`
+	Genres    []string `json:"genres"`
+	Rating    float64  `json:"rating"`
+}
+
+type AddOrUpdateBook struct {
+	Title     string   `json:"title"`
+	Published int      `json:"published"`
+	Pages     int      `json:"pages"`
+	Genres    []string `json:"genres"`
 	Rating    float64  `json:"rating"`
 }
 
@@ -25,6 +35,37 @@ type BooksResponse struct {
 
 type ReadingListClient struct {
 	Endpoint string
+}
+
+func (c *ReadingListClient) Create(book *AddOrUpdateBook) (*Book, error) {
+	body, err := json.Marshal(*book)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, c.Endpoint, bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Println(err)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusCreated {
+		return nil, fmt.Errorf("unexpected response %d", resp.StatusCode)
+	}
+
+	var bookResponse BookResponse
+	if err := ReadJSONObject(resp.Body, &bookResponse); err != nil {
+		return nil, err
+	}
+	return bookResponse.Book, nil
 }
 
 func (c *ReadingListClient) GetAll() (*[]Book, error) {
