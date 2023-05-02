@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/tsmoreland/go-web/readingList/internal/models"
+	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
@@ -19,14 +20,24 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _ = fmt.Fprintf(w, "<html><head><title>Reading List</title></head><body><h1>Reading List</h1><ul>")
-
-	for _, book := range *books {
-		_, _ = fmt.Fprintf(w, "<li>%s (%d)</li>", book.Title, book.Pages)
+	files := []string{
+		"./ui/html/base.html",
+		"./ui/html/partials/nav.html",
+		"./ui/html/pages/home.html",
+	}
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.logger.Println(err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 
-	_, _ = fmt.Fprintf(w, "</ul></body></html>")
-	w.WriteHeader(http.StatusOK)
+	err = ts.ExecuteTemplate(w, "base", books)
+	if err != nil {
+		app.logger.Println(err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (app *application) bookView(w http.ResponseWriter, r *http.Request) {
@@ -38,6 +49,7 @@ func (app *application) bookView(w http.ResponseWriter, r *http.Request) {
 
 	book, err := app.client.Get(int64(id))
 	if err != nil {
+		app.logger.Print(err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
