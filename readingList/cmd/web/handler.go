@@ -54,7 +54,26 @@ func (app *application) bookView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _ = fmt.Fprintf(w, "%s (%d)", book.Title, book.Pages)
+	files := []string{
+		"./ui/html/base.html",
+		"./ui/html/partials/nav.html",
+		"./ui/html/pages/view.html",
+	}
+	funcs := template.FuncMap{"join": strings.Join}
+
+	ts, err := template.New("showBook").Funcs(funcs).ParseFiles(files...)
+	if err != nil {
+		app.logger.Print(err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	err = ts.ExecuteTemplate(w, "base", book)
+	if err != nil {
+		app.logger.Print(err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (app *application) bookCreate(w http.ResponseWriter, r *http.Request) {
