@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"github.com/tsmoreland/go-web/readingList/internal/data"
 	_ "github.com/tsmoreland/go-web/readingList/internal/data"
@@ -20,11 +19,11 @@ func (svc *service) healthcheck(w http.ResponseWriter, r *http.Request) {
 		"environment": svc.settings.env,
 	}
 
-	if js, err := json.Marshal(status); err == nil {
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(js)
-	} else {
+	err := svc.writeJSON(w, http.StatusOK, status)
+	if err != nil {
+		svc.logger.Print(err.Error())
 		http.Error(w, "", http.StatusInternalServerError)
+		return
 	}
 }
 

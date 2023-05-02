@@ -10,7 +10,7 @@ import (
 
 type envelope map[string]any
 
-func (svc *service) writeJSON(w http.ResponseWriter, status int, data envelope) error {
+func (svc *service) writeJSON(w http.ResponseWriter, status int, data any) error {
 	w.WriteHeader(status)
 	w.Header().Set("Content-Type", "application/json")
 	return json.NewEncoder(w).Encode(data)
