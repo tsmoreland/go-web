@@ -13,6 +13,7 @@ import (
 
 type application struct {
 	client *models.ReadingListClient
+	logger *log.Logger
 }
 
 func main() {
@@ -20,7 +21,7 @@ func main() {
 
 	var port int
 	flag.IntVar(&port, "port", 9001, "HTTP Listen Port")
-	apiEndpoint := flag.String("api-endpoint", "http://localhost:9000", "API endpoint")
+	apiEndpoint := flag.String("api-endpoint", "http://localhost:9000/api/v1/books", "API endpoint")
 	flag.Parse()
 	address := fmt.Sprintf("localhost:%d", port)
 
@@ -28,6 +29,7 @@ func main() {
 		client: &models.ReadingListClient{
 			Endpoint: *apiEndpoint,
 		},
+		logger: logger,
 	}
 
 	svr := http.Server{
