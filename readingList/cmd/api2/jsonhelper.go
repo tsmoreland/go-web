@@ -40,9 +40,12 @@ func (api *Api) writeProblemDetails(w http.ResponseWriter, r *http.Request, titl
 		Instance: r.URL.String(),
 	}
 
-	if err := api.writeJSON(w, statusCode, problem); err != nil {
+	w.WriteHeader(statusCode)
+	w.Header().Set("Content-Type", "application/problem+json")
+	if err := json.NewEncoder(w).Encode(problem); err != nil {
 		api.logger.Print(err.Error())
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
+
 }
