@@ -9,20 +9,28 @@
 package main
 
 import (
+	"github.com/tsmoreland/go-web/readingList/internal/data"
 	"log"
 	"net/http"
 	"os"
 )
 
 type Api struct {
-	logger *log.Logger
+	logger     *log.Logger
+	repository *data.Repository
 }
 
-func NewApi() *Api {
-	api := &Api{
-		logger: log.New(os.Stdout, "", log.Ldate|log.Ltime),
+func NewApi(dsn string) (*Api, error) {
+	repository, err := data.NewSqliteRepository(dsn)
+	if err != nil {
+		return nil, err
 	}
-	return api
+
+	api := &Api{
+		logger:     log.New(os.Stdout, "", log.Ldate|log.Ltime),
+		repository: &repository,
+	}
+	return api, nil
 }
 
 func (api *Api) AddBook(w http.ResponseWriter, r *http.Request) {
