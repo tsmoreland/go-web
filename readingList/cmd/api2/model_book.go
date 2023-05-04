@@ -8,6 +8,8 @@
  */
 package main
 
+import "github.com/tsmoreland/go-web/readingList/internal/data"
+
 type Book struct {
 	Id int64 `json:"id,omitempty"`
 
@@ -20,4 +22,25 @@ type Book struct {
 	Rating float32 `json:"rating,omitempty"`
 
 	Genres []string `json:"genres,omitempty"`
+}
+
+func NewBookModel(book *data.Book) *Book {
+	return &Book{
+		Id:        book.ID,
+		Title:     book.Title,
+		Published: int32(book.Published),
+		Pages:     int32(book.Pages),
+		Rating:    float32(book.Rating),
+		Genres:    book.Genres,
+	}
+}
+
+func NewBooksModel(books []*data.Book) []*Book {
+	var bookModels []*Book
+
+	for _, book := range books {
+		bookModel := NewBookModel(book)
+		bookModels = append(bookModels, bookModel)
+	}
+	return bookModels
 }
