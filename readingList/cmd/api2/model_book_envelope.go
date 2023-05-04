@@ -8,6 +8,13 @@
  */
 package main
 
+import "github.com/tsmoreland/go-web/readingList/internal/data"
+
 type BookEnvelope struct {
 	Book *Book `json:"book,omitempty"`
+}
+
+func NewBookEnvelopeFromEntity(book *data.Book) *BookEnvelope {
+	bookModel := NewBookModel(book)
+	return &BookEnvelope{Book: bookModel}
 }

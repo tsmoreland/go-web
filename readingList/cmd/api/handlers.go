@@ -32,6 +32,7 @@ func (svc *service) getOrCreateBooks(w http.ResponseWriter, r *http.Request) {
 		books, err := svc.repository.FindAll(true)
 		if err != nil {
 			http.Error(w, "", http.StatusInternalServerError)
+			return
 		}
 
 		if err := svc.writeJSON(w, http.StatusOK, envelope{"books": books}); err != nil {

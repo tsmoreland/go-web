@@ -9,10 +9,8 @@
 package main
 
 import (
-	"net/http"
-	"strings"
-
 	"github.com/gorilla/mux"
+	"net/http"
 )
 
 type Route struct {
@@ -65,35 +63,35 @@ func getRoutes(api *Api) Routes {
 		},
 		Route{
 			"AddBook",
-			strings.ToUpper("Post"),
+			http.MethodPost,
 			"/api/v2/books",
 			api.AddBook,
 		},
 
 		Route{
 			"DeleteBook",
-			strings.ToUpper("Delete"),
+			http.MethodDelete,
 			"/api/v2/books/{id}",
 			api.DeleteBook,
 		},
 
 		Route{
 			"GetAllBooks",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/api/v2/books",
 			api.GetAllBooks,
 		},
 
 		Route{
 			"GetBook",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/api/v2/books/{id}",
 			api.GetBook,
 		},
 
 		Route{
 			"UpdateBook",
-			strings.ToUpper("Put"),
+			http.MethodPut,
 			"/api/v2/books/{id}",
 			api.UpdateBook,
 		},
