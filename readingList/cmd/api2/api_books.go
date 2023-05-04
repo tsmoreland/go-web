@@ -17,20 +17,15 @@ import (
 
 type Api struct {
 	logger     *log.Logger
-	repository *data.Repository
+	repository data.Repository
 }
 
-func NewApi(dsn string) (*Api, error) {
-	repository, err := data.NewSqliteRepository(dsn)
-	if err != nil {
-		return nil, err
-	}
-
+func NewApi(repository data.Repository) *Api {
 	api := &Api{
 		logger:     log.New(os.Stdout, "", log.Ldate|log.Ltime),
-		repository: &repository,
+		repository: repository,
 	}
-	return api, nil
+	return api
 }
 
 func (api *Api) AddBook(w http.ResponseWriter, r *http.Request) {
