@@ -39,8 +39,16 @@ func (api *Api) DeleteBook(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *Api) GetAllBooks(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
+	books, err := api.repository.FindAll(true)
+	if err != nil {
+		api.writeProblemDetails(w, r, "server error", http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if err = api.writeJSON(w, http.StatusOK, NewBooksEnvelope(books)); err != nil {
+		api.writeProblemDetails(w, r, "server error", http.StatusInternalServerError, err.Error())
+		return
+	}
 }
 
 func (api *Api) GetBook(w http.ResponseWriter, r *http.Request) {
