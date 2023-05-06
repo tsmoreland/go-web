@@ -9,10 +9,12 @@
 package main
 
 import (
+	"errors"
 	"github.com/tsmoreland/go-web/readingList/internal/data"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 type Api struct {
@@ -52,8 +54,29 @@ func (api *Api) GetAllBooks(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *Api) GetBook(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
+	id, err := strconv.ParseInt(r.URL.Path[len("api/v2/books/"):], 10, 64)
+	if err != nil {
+		api.writeProblemDetails(w, r, "Bad Request", http.StatusBadRequest, err.Error())
+		return
+	}
+
+	book, err := api.repository.FindById(id, true)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.NotFoundError):
+			api.writeProblemDetails(w, r, "Not Found", http.StatusNotFound, "matching book not found")
+			return
+		default:
+			api.writeProblemDetails(w, r, "server error", http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
+	bookDto := NewBookEnvelopeFromEntity(book)
+	if err = api.writeJSON(w, http.StatusOK, bookDto); err != nil {
+		api.writeProblemDetails(w, r, "server error", http.StatusInternalServerError, err.Error())
+		return
+	}
 }
 
 func (api *Api) UpdateBook(w http.ResponseWriter, r *http.Request) {
