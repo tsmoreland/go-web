@@ -104,8 +104,10 @@ func (svc *service) getBook(id int64, w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, data.NotFoundError):
 			http.Error(w, "", http.StatusNotFound)
+			return
 		default:
 			http.Error(w, "", http.StatusInternalServerError)
+			return
 		}
 	}
 
