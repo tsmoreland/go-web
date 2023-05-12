@@ -29,7 +29,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/book'
+                $ref: '#/components/schemas/bookEnvelope'
           links:
             GetBookById: 
               operationId: getBook
@@ -156,6 +156,11 @@ components:
           format: int64
         title:
           type: string
+        author_id:
+          type: integer
+          format: int64
+        author:
+          type: string
         published:
           type: integer
         pages:
@@ -177,6 +182,9 @@ components:
       properties:
         title:
           type: string
+        author_id:
+          type: integer
+          format: int64
         published:
           type: integer
         pages:
