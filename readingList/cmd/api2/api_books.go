@@ -31,8 +31,22 @@ func NewApi(repository data.Repository) *Api {
 }
 
 func (api *Api) AddBook(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
+	var dto AddOrUpdateBook
+	if err := api.readJSONObject(w, r, &dto); err != nil {
+		api.writeProblemDetails(w, r, "bad request", http.StatusBadRequest, err.Error())
+		return
+	}
+
+	book, err := api.repository.
+		InsertOne(dto.Title, int(dto.Published), int(dto.Pages), float64(dto.Rating), dto.Genres)
+	if err != nil {
+		api.writeProblemDetails(w, r, "server error", http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if err := api.writeJSON(w, http.StatusCreated, NewBookEnvelopeFromEntity(book)); err != nil {
+		api.writeProblemDetails(w, r, "server error", http.StatusInternalServerError, err.Error())
+	}
 }
 
 func (api *Api) DeleteBook(w http.ResponseWriter, r *http.Request) {
