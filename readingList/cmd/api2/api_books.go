@@ -50,6 +50,7 @@ func (api *Api) AddBook(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *Api) DeleteBook(w http.ResponseWriter, r *http.Request) {
+	_ = r
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
@@ -94,6 +95,7 @@ func (api *Api) GetBook(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *Api) UpdateBook(w http.ResponseWriter, r *http.Request) {
+	_ = r
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
