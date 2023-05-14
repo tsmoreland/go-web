@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/tsmoreland/go-web/readingList/internal/data"
 	"io"
 	"net/http"
 )
@@ -47,5 +48,17 @@ func (api *Api) writeProblemDetails(w http.ResponseWriter, r *http.Request, titl
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
+}
 
+func (api *Api) writeNotFoundOrBadRequestIfHasError(err error, w http.ResponseWriter, r *http.Request) {
+	if err != nil {
+		switch {
+		case errors.Is(err, data.NotFoundError):
+			api.writeProblemDetails(w, r, "Not Found", http.StatusNotFound, "matching book not found")
+			return
+		default:
+			api.writeProblemDetails(w, r, "server error", http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
 }
