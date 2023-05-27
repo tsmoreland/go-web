@@ -10,7 +10,7 @@ type Customer struct {
 	Phone        string `json:"phone"`
 	Email        string `json:"email"`
 	SubType      string `json:"subtype"`
-	Active       string `json:"active"`
+	Active       bool   `json:"active"`
 	CreationDate string `json:"creation"`
 }
 
