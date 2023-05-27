@@ -24,7 +24,7 @@ func main() {
 	customerRouter := r.Methods(http.MethodGet).Subrouter()
 	customerRouter.HandleFunc("/customers", handlers.Customers)
 
-	r.PathPrefix("/home").Handler(http.FileServer(http.Dir("./public")))
+	r.PathPrefix("/home").Handler(http.FileServer(http.Dir(".")))
 
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/home", http.StatusMovedPermanently)
