@@ -63,3 +63,23 @@ func AddCustomer(c *Customer) (bool, error) {
 		return false, errors.New("customer already exists")
 	}
 }
+
+func DeleteCustomer(c *Customer) {
+	matchingIndex := -1
+	for index, item := range customerList {
+		if item.CustomerID == c.CustomerID {
+			matchingIndex = index
+			break
+		}
+	}
+	if matchingIndex == -1 {
+		return
+	}
+
+	// maintaining order
+	customerList = append(customerList[:matchingIndex], customerList[matchingIndex+1:]...)
+	/* or not maintaining order
+	customerList[matchingIndex] = customerList[len(customerList) - 1]
+	customerList = customerList[:len(customerList) - 1]
+	*/
+}
