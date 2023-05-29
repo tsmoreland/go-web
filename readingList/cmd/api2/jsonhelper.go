@@ -50,15 +50,15 @@ func (api *Api) writeProblemDetails(w http.ResponseWriter, r *http.Request, titl
 	}
 }
 
-func (api *Api) writeNotFoundOrBadRequestIfHasError(err error, w http.ResponseWriter, r *http.Request) {
+func (api *Api) writeNotFoundOrBadRequestIfHasError(err error, w http.ResponseWriter, r *http.Request) bool {
 	if err != nil {
 		switch {
 		case errors.Is(err, data.NotFoundError):
 			api.writeProblemDetails(w, r, "Not Found", http.StatusNotFound, "matching book not found")
-			return
 		default:
 			api.writeProblemDetails(w, r, "server error", http.StatusInternalServerError, err.Error())
-			return
 		}
+		return true
 	}
+	return false
 }
