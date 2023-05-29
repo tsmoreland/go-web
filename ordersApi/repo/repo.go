@@ -5,12 +5,14 @@ import (
 	"github.com/tsmoreland/go-web/ordersApi/db"
 	"github.com/tsmoreland/go-web/ordersApi/models"
 	"math"
+	"sync"
 )
 
 // repo holds all the dependencies required for repo operations
 type repo struct {
 	products *db.ProductDB
 	orders   *db.OrderDB
+	lock     sync.Mutex
 }
 
 // Repo is the interface we expose to outside packages
@@ -66,6 +68,8 @@ func (r *repo) validateItem(item models.Item) error {
 }
 
 func (r *repo) processOrders(order *models.Order) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
 	r.processOrder(order)
 	r.orders.Upsert(*order)
 	fmt.Printf("Processing order %s completed\n", order.ID)
