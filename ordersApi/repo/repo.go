@@ -5,14 +5,13 @@ import (
 	"github.com/tsmoreland/go-web/ordersApi/db"
 	"github.com/tsmoreland/go-web/ordersApi/models"
 	"math"
-	"sync"
 )
 
 // repo holds all the dependencies required for repo operations
 type repo struct {
 	products *db.ProductDB
 	orders   *db.OrderDB
-	lock     sync.Mutex
+	incoming chan models.Order
 }
 
 // Repo is the interface we expose to outside packages
@@ -31,7 +30,11 @@ func New() (Repo, error) {
 	o := repo{
 		products: p,
 		orders:   db.NewOrders(),
+		incoming: make(chan models.Order),
 	}
+
+	go o.processOrders()
+
 	return &o, nil
 }
 
@@ -52,7 +55,8 @@ func (r *repo) CreateOrder(item models.Item) (*models.Order, error) {
 	}
 	order := models.NewOrder(item)
 	r.orders.Upsert(order)
-	r.processOrders(&order)
+
+	r.incoming <- order
 	return &order, nil
 }
 
@@ -67,12 +71,12 @@ func (r *repo) validateItem(item models.Item) error {
 	return nil
 }
 
-func (r *repo) processOrders(order *models.Order) {
-	r.lock.Lock()
-	defer r.lock.Unlock()
-	r.processOrder(order)
-	r.orders.Upsert(*order)
-	fmt.Printf("Processing order %s completed\n", order.ID)
+func (r *repo) processOrders() {
+	for order := range r.incoming {
+		r.processOrder(&order)
+		r.orders.Upsert(order)
+		fmt.Printf("Processing order %s completed\n", order.ID)
+	}
 }
 
 // processOrder is an internal method which completes or rejects an order
