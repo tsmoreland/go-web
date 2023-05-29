@@ -21,6 +21,8 @@ type Api struct {
 	repository data.Repository
 }
 
+type idHandlerFunc func(int64, http.ResponseWriter, *http.Request)
+
 func NewApi(repository data.Repository) *Api {
 	api := &Api{
 		logger:     log.New(os.Stdout, "", log.Ldate|log.Ltime),
@@ -49,9 +51,13 @@ func (api *Api) AddBook(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *Api) DeleteBook(w http.ResponseWriter, r *http.Request) {
-	_ = r
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
+	api.handleRequestWithId(w, r, func(id int64, w http.ResponseWriter, r *http.Request) {
+		_ = r
+		err := api.repository.DeleteById(id)
+		if api.writeNotFoundOrBadRequestIfHasError(err, w, r) {
+			return
+		}
+	})
 }
 
 func (api *Api) GetAllBooks(w http.ResponseWriter, r *http.Request) {
@@ -68,49 +74,55 @@ func (api *Api) GetAllBooks(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *Api) GetBook(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseInt(r.URL.Path[len("api/v2/books/"):], 10, 64)
-	if err != nil {
-		api.writeProblemDetails(w, r, "Bad Request", http.StatusBadRequest, err.Error())
-		return
-	}
+	api.handleRequestWithId(w, r, func(id int64, w http.ResponseWriter, r *http.Request) {
+		book, err := api.repository.FindById(id, true)
+		if api.writeNotFoundOrBadRequestIfHasError(err, w, r) {
+			return
+		}
 
-	book, err := api.repository.FindById(id, true)
-	api.writeNotFoundOrBadRequestIfHasError(err, w, r)
-
-	bookDto := NewBookEnvelopeFromEntity(book)
-	if err = api.writeJSON(w, http.StatusOK, bookDto); err != nil {
-		api.writeProblemDetails(w, r, "server error", http.StatusInternalServerError, err.Error())
-		return
-	}
+		bookDto := NewBookEnvelopeFromEntity(book)
+		if err = api.writeJSON(w, http.StatusOK, bookDto); err != nil {
+			api.writeProblemDetails(w, r, "server error", http.StatusInternalServerError, err.Error())
+			return
+		}
+	})
 }
 
 func (api *Api) UpdateBook(w http.ResponseWriter, r *http.Request) {
+	api.handleRequestWithId(w, r, func(id int64, w http.ResponseWriter, r *http.Request) {
+		var dto AddOrUpdateBook
+		if err := api.readJSONObject(w, r, &dto); err != nil {
+			api.writeProblemDetails(w, r, "bad request", http.StatusBadRequest, err.Error())
+			return
+		}
+
+		book, err := api.repository.FindById(id, true)
+		if api.writeNotFoundOrBadRequestIfHasError(err, w, r) {
+			return
+		}
+
+		book.Title = dto.Title
+		book.Published = int(dto.Published)
+		book.Pages = int(dto.Pages)
+		book.Rating = float64(dto.Rating)
+		book.Genres = dto.Genres
+
+		if err = api.repository.Update(book); err != nil {
+			api.writeProblemDetails(w, r, "server error", http.StatusInternalServerError, err.Error())
+		}
+
+		if err = api.writeJSON(w, http.StatusOK, NewBookEnvelopeFromEntity(book)); err != nil {
+			api.writeProblemDetails(w, r, "server error", http.StatusInternalServerError, err.Error())
+		}
+	})
+}
+
+func (api *Api) handleRequestWithId(w http.ResponseWriter, r *http.Request, handler idHandlerFunc) {
 	id, err := strconv.ParseInt(r.URL.Path[len("api/v2/books/"):], 10, 64)
 	if err != nil {
 		api.writeProblemDetails(w, r, "Bad Request", http.StatusBadRequest, err.Error())
 		return
 	}
+	handler(id, w, r)
 
-	var dto AddOrUpdateBook
-	if err := api.readJSONObject(w, r, &dto); err != nil {
-		api.writeProblemDetails(w, r, "bad request", http.StatusBadRequest, err.Error())
-		return
-	}
-
-	book, err := api.repository.FindById(id, true)
-	api.writeNotFoundOrBadRequestIfHasError(err, w, r)
-
-	book.Title = dto.Title
-	book.Published = int(dto.Published)
-	book.Pages = int(dto.Pages)
-	book.Rating = float64(dto.Rating)
-	book.Genres = dto.Genres
-
-	if err = api.repository.Update(book); err != nil {
-		api.writeProblemDetails(w, r, "server error", http.StatusInternalServerError, err.Error())
-	}
-
-	if err = api.writeJSON(w, http.StatusOK, NewBookEnvelopeFromEntity(book)); err != nil {
-		api.writeProblemDetails(w, r, "server error", http.StatusInternalServerError, err.Error())
-	}
 }
