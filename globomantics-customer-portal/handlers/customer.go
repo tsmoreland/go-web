@@ -128,8 +128,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cookie := &http.Cookie{
-		Name:  "session",
-		Value: customerId,
+		Name:     "session",
+		Value:    customerId,
+		HttpOnly: true,
+		Secure:   false, // should be true but for testing purposes we're leaving as false - ok for local dev
 	}
 
 	http.SetCookie(w, cookie)
@@ -137,8 +139,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 func Logout(w http.ResponseWriter, r *http.Request) {
 	cookie := &http.Cookie{
-		Name:   "session",
-		MaxAge: -1,
+		Name:     "session",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   true,
 	}
 	http.SetCookie(w, cookie)
 
