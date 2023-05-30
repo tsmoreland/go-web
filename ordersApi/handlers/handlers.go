@@ -80,7 +80,7 @@ func (h *handler) OrderInsert(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) Stats(w http.ResponseWriter, r *http.Request) {
-	
+
 }
 
 func (h *handler) Close(w http.ResponseWriter, r *http.Request) {
