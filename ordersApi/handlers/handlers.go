@@ -21,6 +21,8 @@ type Handler interface {
 	ProductIndex(w http.ResponseWriter, r *http.Request)
 	OrderShow(w http.ResponseWriter, r *http.Request)
 	OrderInsert(w http.ResponseWriter, r *http.Request)
+	Stats(w http.ResponseWriter, r *http.Request)
+	Close(w http.ResponseWriter, r *http.Request)
 }
 
 func New() (Handler, error) {
@@ -75,6 +77,10 @@ func (h *handler) OrderInsert(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeResponse(w, http.StatusOK, order, nil)
+}
+
+func (h *handler) Stats(w http.ResponseWriter, r *http.Request) {
+	
 }
 
 func (h *handler) Close(w http.ResponseWriter, r *http.Request) {
