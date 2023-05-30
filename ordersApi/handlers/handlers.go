@@ -6,12 +6,14 @@ import (
 	"github.com/tsmoreland/go-web/ordersApi/models"
 	"github.com/tsmoreland/go-web/ordersApi/repo"
 	"net/http"
+	"sync"
 
 	"github.com/gorilla/mux"
 )
 
 type handler struct {
 	repo repo.Repo
+	once sync.Once
 }
 
 type Handler interface {
@@ -73,4 +75,11 @@ func (h *handler) OrderInsert(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeResponse(w, http.StatusOK, order, nil)
+}
+
+func (h *handler) Close(w http.ResponseWriter, r *http.Request) {
+	h.once.Do(func() {
+		h.repo.Close()
+	})
+	writeResponse(w, http.StatusOK, "The orders app is now closed", nil)
 }

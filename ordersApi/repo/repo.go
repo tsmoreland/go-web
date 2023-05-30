@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/tsmoreland/go-web/ordersApi/db"
 	"github.com/tsmoreland/go-web/ordersApi/models"
+	"log"
 	"math"
 )
 
@@ -12,6 +13,7 @@ type repo struct {
 	products *db.ProductDB
 	orders   *db.OrderDB
 	incoming chan models.Order
+	done     chan struct{}
 }
 
 // Repo is the interface we expose to outside packages
@@ -19,6 +21,7 @@ type Repo interface {
 	CreateOrder(item models.Item) (*models.Order, error)
 	GetAllProducts() []models.Product
 	GetOrder(id string) (models.Order, error)
+	Close()
 }
 
 // New creates a new Order repo with the correct database dependencies
@@ -31,6 +34,7 @@ func New() (Repo, error) {
 		products: p,
 		orders:   db.NewOrders(),
 		incoming: make(chan models.Order),
+		done:     make(chan struct{}),
 	}
 
 	go o.processOrders()
@@ -56,8 +60,13 @@ func (r *repo) CreateOrder(item models.Item) (*models.Order, error) {
 	order := models.NewOrder(item)
 	r.orders.Upsert(order)
 
-	r.incoming <- order
-	return &order, nil
+	select {
+	case r.incoming <- order:
+		r.orders.Upsert(order)
+		return &order, nil
+	case <-r.done:
+		return nil, fmt.Errorf("orders app is closed, try again later")
+	}
 }
 
 // validateItem runs validations on a given order
@@ -72,10 +81,16 @@ func (r *repo) validateItem(item models.Item) error {
 }
 
 func (r *repo) processOrders() {
-	for order := range r.incoming {
-		r.processOrder(&order)
-		r.orders.Upsert(order)
-		fmt.Printf("Processing order %s completed\n", order.ID)
+	for {
+		select {
+		case order := <-r.incoming:
+			r.processOrder(&order)
+			r.orders.Upsert(order)
+			fmt.Printf("Processing order %s completed\n", order.ID)
+		case <-r.done:
+			log.Println("Order processing stopped.")
+			return
+		}
 	}
 }
 
@@ -100,4 +115,9 @@ func (r *repo) processOrder(order *models.Order) {
 	total := math.Round(float64(order.Item.Amount)*product.Price*100) / 100
 	order.Total = &total
 	order.Complete()
+}
+
+// Close closes incoming orders allowing existing orders to complete but no new ones to be accepted.
+func (r *repo) Close() {
+	close(r.done)
 }

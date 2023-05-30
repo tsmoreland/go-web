@@ -1,4 +1,4 @@
-package ordersApi
+package main
 
 import (
 	"fmt"
