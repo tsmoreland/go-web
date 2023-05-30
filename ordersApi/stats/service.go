@@ -7,10 +7,13 @@ import (
 	"time"
 )
 
+const WorkerCount = 3
+
 type statsService struct {
 	result    *result
 	processed <-chan models.Order
 	done      <-chan struct{}
+	pubStats  chan models.Statistics
 }
 
 func (s *statsService) GetStats() models.Statistics {
@@ -26,8 +29,12 @@ func New(processed <-chan models.Order, done chan struct{}) Service {
 		result:    &result{},
 		processed: processed,
 		done:      done,
+		pubStats:  make(chan models.Statistics, WorkerCount),
 	}
-	go s.processStats()
+	for i := 0; i < WorkerCount; i++ {
+		go s.processStats()
+	}
+	go s.reconcile()
 	return &s
 }
 
@@ -37,15 +44,22 @@ func (s *statsService) processStats() {
 		select {
 		case order := <-s.processed:
 			pubStats := s.processOrder(order)
-			s.reconcile(pubStats)
+			s.pubStats <- pubStats
 		case <-s.done:
 			log.Println("Stats processing stopped")
 		}
 	}
 }
 
-func (s *statsService) reconcile(pubStats models.Statistics) {
-	s.result.Combine(pubStats)
+func (s *statsService) reconcile() {
+	for {
+		select {
+		case pubStats := <-s.pubStats:
+			s.result.Combine(pubStats)
+		case <-s.done:
+			log.Println("Reconcile stopped")
+		}
+	}
 }
 
 func (s *statsService) processOrder(order models.Order) models.Statistics {
