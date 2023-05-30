@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/tsmoreland/go-web/ordersApi/db"
 	"github.com/tsmoreland/go-web/ordersApi/models"
+	"github.com/tsmoreland/go-web/ordersApi/stats"
 	"log"
 	"math"
 )
@@ -12,6 +13,7 @@ import (
 type repo struct {
 	products *db.ProductDB
 	orders   *db.OrderDB
+	stats    stats.Service
 	incoming chan models.Order
 	done     chan struct{}
 }
@@ -21,6 +23,7 @@ type Repo interface {
 	CreateOrder(item models.Item) (*models.Order, error)
 	GetAllProducts() []models.Product
 	GetOrder(id string) (models.Order, error)
+	GetOrderStats() models.Statistics
 	Close()
 }
 
@@ -30,11 +33,16 @@ func New() (Repo, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	processed := make(chan models.Order, stats.WorkerCount)
+	done := make(chan struct{})
+
 	o := repo{
 		products: p,
 		orders:   db.NewOrders(),
 		incoming: make(chan models.Order),
-		done:     make(chan struct{}),
+		stats:    stats.New(processed, done),
+		done:     done,
 	}
 
 	go o.processOrders()
@@ -115,6 +123,10 @@ func (r *repo) processOrder(order *models.Order) {
 	total := math.Round(float64(order.Item.Amount)*product.Price*100) / 100
 	order.Total = &total
 	order.Complete()
+}
+
+func (r *repo) GetOrderStats() models.Statistics {
+	return r.stats.GetStats()
 }
 
 // Close closes incoming orders allowing existing orders to complete but no new ones to be accepted.
