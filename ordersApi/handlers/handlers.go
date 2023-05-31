@@ -38,12 +38,14 @@ func New() (Handler, error) {
 
 // Index returns a simple hello response for the homepage
 func (h *handler) Index(w http.ResponseWriter, r *http.Request) {
+	_ = r
 	// Send an HTTP status & a hardcoded message
 	writeResponse(w, http.StatusOK, "Welcome to the Orders App!", nil)
 }
 
 // ProductIndex displays all products in the system
 func (h *handler) ProductIndex(w http.ResponseWriter, r *http.Request) {
+	_ = r
 	p := h.repo.GetAllProducts()
 	// Send an HTTP status & send the slice
 	writeResponse(w, http.StatusOK, p, nil)
@@ -81,6 +83,18 @@ func (h *handler) OrderInsert(w http.ResponseWriter, r *http.Request) {
 	writeResponse(w, http.StatusOK, order, nil)
 }
 
+func (h *handler) OrderReverse(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	orderId := vars["orderId"]
+
+	_, err := h.repo.RequestReversal(orderId)
+	if err != nil {
+		writeResponse(w, http.StatusNotFound, nil, err)
+	}
+
+	writeResponse(w, http.StatusOK, nil, nil)
+}
+
 func (h *handler) Stats(w http.ResponseWriter, r *http.Request) {
 	reqCtx := r.Context()
 	ctx, cancel := context.WithTimeout(reqCtx, 100*time.Millisecond)
@@ -93,6 +107,7 @@ func (h *handler) Stats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) Close(w http.ResponseWriter, r *http.Request) {
+	_ = r
 	h.once.Do(func() {
 		h.repo.Close()
 	})

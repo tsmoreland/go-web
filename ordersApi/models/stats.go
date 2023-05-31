@@ -6,6 +6,7 @@ type Statistics struct {
 	CompletedOrders int     `json:"completedOrders"`
 	RejectedOrders  int     `json:"rejectedOrders"`
 	Revenue         float64 `json:"revenue"`
+	ReversedOrders  int     `json:"reversedOrders"`
 }
 
 // Combine adds numbers from two statistics objects

@@ -8,9 +8,11 @@ import (
 type OrderStatus string
 
 const (
-	OrderStatusNew       OrderStatus = "new"
-	OrderStatusCompleted OrderStatus = "complete"
-	OrderStatusRejected  OrderStatus = "rejected"
+	OrderStatusNew               OrderStatus = "new"
+	OrderStatusCompleted         OrderStatus = "complete"
+	OrderStatusRejected          OrderStatus = "rejected"
+	OrderStatusReversalRequested OrderStatus = "reversal_requested"
+	OrderStatusRevered           OrderStatus = "reversed"
 )
 
 const timeFormat = "2006-01-02 15:04:05.000"
@@ -44,4 +46,12 @@ func (o *Order) Complete() {
 
 func (o *Order) Rejected() {
 	o.Status = OrderStatusRejected
+}
+
+func (o *Order) RequestReversal() {
+	o.Status = OrderStatusReversalRequested
+}
+
+func (o *Order) Reversed() {
+	o.Status = OrderStatusRevered
 }

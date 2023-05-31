@@ -25,6 +25,7 @@ type Repo interface {
 	GetAllProducts() []models.Product
 	GetOrder(id string) (models.Order, error)
 	GetOrderStats(ctx context.Context) (models.Statistics, error)
+	RequestReversal(orderId string) (*models.Order, error)
 	Close()
 }
 
@@ -78,6 +79,25 @@ func (r *repo) CreateOrder(item models.Item) (*models.Order, error) {
 	}
 }
 
+func (r *repo) RequestReversal(orderId string) (*models.Order, error) {
+	order, err := r.GetOrder(orderId)
+	if err != nil {
+		return nil, err
+	}
+	if order.Status != models.OrderStatusCompleted {
+		return nil, fmt.Errorf("invalid order, unable to reverse uncompleted orders")
+	}
+
+	order.RequestReversal()
+	select {
+	case r.incoming <- order:
+		r.orders.Upsert(order)
+		return &order, nil
+	case <-r.done:
+		return nil, fmt.Errorf("order app is closed, try again later")
+	}
+}
+
 // validateItem runs validations on a given order
 func (r *repo) validateItem(item models.Item) error {
 	if item.Amount < 1 {
@@ -105,15 +125,23 @@ func (r *repo) processOrders() {
 
 // processOrder is an internal method which completes or rejects an order
 func (r *repo) processOrder(order *models.Order) {
+	fetchedOrder, err := r.orders.FindById(order.ID)
+	if err != nil || fetchedOrder.Status != models.OrderStatusCompleted {
+		log.Printf("duplicate reversal order %v", order.ID)
+	}
 	item := order.Item
+	if order.Status == models.OrderStatusReversalRequested {
+		item.Amount = -item.Amount
+	}
+
 	product, err := r.products.FindById(item.ProductID)
 	if err != nil {
-		order.Status = models.OrderStatusRejected
+		order.Rejected()
 		order.Error = err.Error()
 		return
 	}
 	if product.Stock < item.Amount {
-		order.Status = models.OrderStatusRejected
+		order.Reversed()
 		order.Error = fmt.Sprintf("not enough stock for product %s:got %d, want %d", item.ProductID, product.Stock, item.Amount)
 		return
 	}
