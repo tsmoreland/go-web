@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"context"
 	"fmt"
 	"github.com/tsmoreland/go-web/ordersApi/db"
 	"github.com/tsmoreland/go-web/ordersApi/models"
@@ -23,7 +24,7 @@ type Repo interface {
 	CreateOrder(item models.Item) (*models.Order, error)
 	GetAllProducts() []models.Product
 	GetOrder(id string) (models.Order, error)
-	GetOrderStats() models.Statistics
+	GetOrderStats(ctx context.Context) (models.Statistics, error)
 	Close()
 }
 
@@ -125,8 +126,13 @@ func (r *repo) processOrder(order *models.Order) {
 	order.Complete()
 }
 
-func (r *repo) GetOrderStats() models.Statistics {
-	return r.stats.GetStats()
+func (r *repo) GetOrderStats(ctx context.Context) (models.Statistics, error) {
+	select {
+	case s := <-r.stats.GetStats(ctx):
+		return s, nil
+	case <-ctx.Done():
+		return models.Statistics{}, ctx.Err()
+	}
 }
 
 // Close closes incoming orders allowing existing orders to complete but no new ones to be accepted.

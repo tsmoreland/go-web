@@ -1,6 +1,7 @@
 package stats
 
 import (
+	"context"
 	"github.com/tsmoreland/go-web/ordersApi/models"
 	"log"
 	"math/rand"
@@ -16,12 +17,24 @@ type statsService struct {
 	pubStats  chan models.Statistics
 }
 
-func (s *statsService) GetStats() models.Statistics {
-	return s.result.Get()
+func (s *statsService) GetStats(ctx context.Context) <-chan models.Statistics {
+	stats := make(chan models.Statistics)
+	go func() {
+		randomSleep()
+		select {
+		case stats <- s.result.Get():
+			log.Println("result statistics retrieved before timeout")
+			return
+		case <-ctx.Done():
+			log.Println("operation timeed out before statistics could be retrieved")
+			return
+		}
+	}()
+	return stats
 }
 
 type Service interface {
-	GetStats() models.Statistics
+	GetStats(ctx context.Context) <-chan models.Statistics
 }
 
 func New(processed <-chan models.Order, done chan struct{}) Service {
