@@ -1,10 +1,16 @@
 github.com/google/uuid v1.3.1 h1:KjJaJ9iWZ3jOFZIf1Lqf4laDRCasjl0BCmnEGxkdLb4=
 github.com/google/uuid v1.3.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
+github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/tsmoreland/go-web/globoticket-ticketmanager/domain v0.0.0-20221223210512-62993b75261e h1:a4H6ksFPrLMUrqNkw4T3Ddon6ehr/Bj7X/Kybmcddog=
 github.com/tsmoreland/go-web/globoticket-ticketmanager/domain v0.0.0-20221223210512-62993b75261e/go.mod h1:arWbmpnKlJp490g29L/uJ719FzZa5zpB8ls06Ve8DSI=
 github.com/tsmoreland/go-web/globoticket-ticketmanager/domain v0.0.0-20230804214030-0a1be445044b h1:/7Ep85HJBTGL+Jdtl+Sk84BKxd1OGTNGN3oZ454bH0A=
 github.com/tsmoreland/go-web/globoticket-ticketmanager/domain v0.0.0-20230804214030-0a1be445044b/go.mod h1:m0cAQgbv6h3zFvEG/ElLwBB1sVXeEVABQpDd+FY9K9w=
+github.com/tsmoreland/go-web/globoticket-ticketmanager/domain v0.0.0-20240113161707-13a4b5670550 h1:7doKsYkr5x+20gw8PpOC9yrtkDSydPJMeP3y7cEFEsQ=
+github.com/tsmoreland/go-web/globoticket-ticketmanager/domain v0.0.0-20240113161707-13a4b5670550/go.mod h1:vdc2zUh5WgFqfg1dBAk6Wrr9KiadfdUr0RV4qxg9Q+g=
 golang.org/x/net v0.17.0 h1:pVaXccu2ozPjCXewfr1S7xza/zcXTity9cCdXQYSjIM=
 golang.org/x/net v0.17.0/go.mod h1:NxSsAGuq816PNPmqtQdLE42eU2Fs7NoRIZrHJAlaCOE=
 golang.org/x/net v0.20.0 h1:aCL9BSgETF1k+blQaYUBx9hJ9LOGP3gAVemcZlf1Kpo=
 golang.org/x/net v0.20.0/go.mod h1:z8BVo6PvndSri0LbOE3hAn0apkU+1YvI6E70E9jsnvY=
+golang.org/x/net v0.24.0 h1:1PcaxkF854Fu3+lvBIx5SYn9wRlBzzcnHZSiaFFAb0w=
+golang.org/x/net v0.24.0/go.mod h1:2Q7sJY5mzlzWjKtYUEXSlBWCdyaioyXzRB2RtU8KVE8=
